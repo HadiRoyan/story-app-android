@@ -42,7 +42,7 @@ class DetailStoryActivity : AppCompatActivity() {
     }
 
     private fun setTopBar() {
-        binding.topAppBar.setNavigationOnClickListener { v ->
+        binding.topAppBar.setNavigationOnClickListener { _ ->
             onBackPressed()
         }
     }

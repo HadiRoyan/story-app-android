@@ -2,12 +2,19 @@ package com.hadroy.storyapp.data.repository
 
 import android.app.Application
 import android.util.Log
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.liveData
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
+import androidx.paging.liveData
 import com.google.gson.Gson
 import com.hadroy.storyapp.R
 import com.hadroy.storyapp.data.ResultState
+import com.hadroy.storyapp.data.StoryPagingSource
 import com.hadroy.storyapp.data.api.ApiService
 import com.hadroy.storyapp.data.model.ErrorResponse
+import com.hadroy.storyapp.data.model.StoryItem
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
@@ -21,12 +28,10 @@ class StoryRepository private constructor(
     private val application: Application
 ) {
 
-
-    fun getAllStory(token: String) = liveData {
+    fun getStoriesWithLocation(token: String) = liveData {
         emit(ResultState.Loading)
-
         try {
-            val response = apiService.getStories("Bearer $token")
+            val response = apiService.getStoriesWithLocation("Bearer $token")
             emit(ResultState.Success(response))
         } catch (e: HttpException) {
             val jsonInString = e.response()?.errorBody()?.string()
@@ -36,9 +41,20 @@ class StoryRepository private constructor(
         } catch (e: SocketTimeoutException) {
             emit(ResultState.Error(application.resources.getString(R.string.no_internet_message)))
         } catch (e: Exception) {
-            Log.e(TAG, "getAllStory: ${e.message}", e)
+            Log.d(TAG, "getAllStory: ${e.message}", e)
             emit(ResultState.Error(application.resources.getString(R.string.something_failed_message)))
         }
+    }
+
+    fun getAllStory(token: String): LiveData<PagingData<StoryItem>> {
+        return Pager(
+            config = PagingConfig(
+                pageSize = 5
+            ),
+            pagingSourceFactory = {
+                StoryPagingSource(apiService, "Bearer $token")
+            }
+        ).liveData
     }
 
     fun uploadStory(token: String, imageFile: File, description: String) = liveData {
@@ -61,7 +77,7 @@ class StoryRepository private constructor(
         } catch (e: SocketTimeoutException) {
             emit(ResultState.Error(application.resources.getString(R.string.no_internet_message)))
         } catch (e: Exception) {
-            Log.e(TAG, "getAllStory: ${e.message}", e)
+            Log.d(TAG, "getAllStory: ${e.message}", e)
             emit(ResultState.Error(application.resources.getString(R.string.something_failed_message)))
         }
     }

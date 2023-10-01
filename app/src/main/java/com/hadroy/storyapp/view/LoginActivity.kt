@@ -61,8 +61,6 @@ class LoginActivity : AppCompatActivity() {
                             is ResultState.Success -> {
                                 gotoMain()
                             }
-
-                            else -> {}
                         }
                     }
                 }

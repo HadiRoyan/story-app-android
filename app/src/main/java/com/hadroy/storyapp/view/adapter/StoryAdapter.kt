@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.app.ActivityOptionsCompat
 import androidx.core.util.Pair
+import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
@@ -14,9 +15,7 @@ import com.hadroy.storyapp.data.model.StoryItem
 import com.hadroy.storyapp.databinding.ItemRowStoryBinding
 import com.hadroy.storyapp.view.DetailStoryActivity
 
-class StoryAdapter : RecyclerView.Adapter<StoryAdapter.StoryViewHolder>() {
-
-    private val listStory = ArrayList<StoryItem>()
+class StoryAdapter : PagingDataAdapter<StoryItem, StoryAdapter.StoryViewHolder>(DIFF_CALLBACK) {
 
     class StoryViewHolder(private val binding: ItemRowStoryBinding) :
         RecyclerView.ViewHolder(binding.root) {
@@ -48,14 +47,6 @@ class StoryAdapter : RecyclerView.Adapter<StoryAdapter.StoryViewHolder>() {
 
     }
 
-    fun setListStory(newListStory: List<StoryItem>) {
-        val diffCallback = StoryDiffCallback(listStory, newListStory)
-        val diffResult = DiffUtil.calculateDiff(diffCallback)
-        this.listStory.clear()
-        this.listStory.addAll(newListStory)
-        diffResult.dispatchUpdatesTo(this)
-    }
-
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): StoryViewHolder {
         val binding =
             ItemRowStoryBinding.inflate(LayoutInflater.from(parent.context), parent, false)
@@ -63,10 +54,22 @@ class StoryAdapter : RecyclerView.Adapter<StoryAdapter.StoryViewHolder>() {
         return StoryViewHolder(binding)
     }
 
-    override fun getItemCount() = listStory.size
-
     override fun onBindViewHolder(holder: StoryViewHolder, position: Int) {
-        val story = listStory[position]
-        holder.bind(story, holder.itemView)
+        val story = getItem(position)
+        if (story != null) {
+            holder.bind(story, holder.itemView)
+        }
+    }
+
+    companion object {
+        val DIFF_CALLBACK = object : DiffUtil.ItemCallback<StoryItem>() {
+            override fun areItemsTheSame(oldItem: StoryItem, newItem: StoryItem): Boolean {
+                return oldItem == newItem
+            }
+
+            override fun areContentsTheSame(oldItem: StoryItem, newItem: StoryItem): Boolean {
+                return oldItem.id == newItem.id
+            }
+        }
     }
 }

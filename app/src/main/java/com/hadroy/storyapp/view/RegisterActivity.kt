@@ -71,8 +71,6 @@ class RegisterActivity : AppCompatActivity() {
                                 Log.e(TAG, "message: $message")
                                 showLoading(false)
                             }
-
-                            else -> {}
                         }
                     }
                 }
@@ -87,6 +85,8 @@ class RegisterActivity : AppCompatActivity() {
 
         binding.btnLogin.setOnClickListener {
             startActivity(Intent(this@RegisterActivity, LoginActivity::class.java))
+            finishAffinity()
+            finish()
         }
     }
 

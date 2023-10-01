@@ -5,15 +5,14 @@ import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
 import android.view.View
-import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.hadroy.storyapp.R
-import com.hadroy.storyapp.data.ResultState
 import com.hadroy.storyapp.data.model.LoginResult
 import com.hadroy.storyapp.databinding.ActivityMainBinding
+import com.hadroy.storyapp.view.adapter.LoadingStateAdapter
 import com.hadroy.storyapp.view.adapter.StoryAdapter
 import com.hadroy.storyapp.viewmodel.MainViewModel
 import com.hadroy.storyapp.viewmodel.factory.MainViewModelFactory
@@ -57,40 +56,17 @@ class MainActivity : AppCompatActivity() {
     private fun setRecyclerViewAdapter() {
         storyAdapter = StoryAdapter()
         binding.rvStory.layoutManager = LinearLayoutManager(this)
-        binding.rvStory.adapter = storyAdapter
+        binding.rvStory.adapter = storyAdapter.withLoadStateFooter(
+            footer = LoadingStateAdapter {
+                storyAdapter.retry()
+            }
+        )
     }
 
     private fun observeData() {
         Log.d(TAG, "observe data with token: ${data.token}")
-        viewModel.getAllStory(data.token).observe(this@MainActivity) { result ->
-            if (result != null) {
-                when (result) {
-                    is ResultState.Loading -> {
-                        showLoading(true)
-                    }
-
-                    is ResultState.Success -> {
-                        val response = result.data
-                        storyAdapter.setListStory(response.listStory)
-                        showLoading(false)
-                    }
-
-                    is ResultState.Error -> {
-                        val message = result.error
-                        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
-                        Log.e(TAG, "message: $message")
-                        showLoading(false)
-                    }
-
-                    else -> {}
-                }
-            } else {
-                Toast.makeText(
-                    this@MainActivity,
-                    resources.getString(R.string.something_failed_message),
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
+        viewModel.getAllStory(data.token).observe(this@MainActivity) {
+            storyAdapter.submitData(lifecycle, it)
         }
     }
 
@@ -117,6 +93,11 @@ class MainActivity : AppCompatActivity() {
                     true
                 }
 
+                R.id.action_map -> {
+                    startActivity(Intent(this@MainActivity, MapsActivity::class.java))
+                    true
+                }
+
                 else -> false
             }
         }
@@ -126,7 +107,7 @@ class MainActivity : AppCompatActivity() {
         val alertDialog = AlertDialog.Builder(this)
         alertDialog.setTitle(resources.getString(R.string.logout).uppercase())
             .setMessage(resources.getString(R.string.verify_logout_message))
-            .setPositiveButton(resources.getString(R.string.yes).uppercase()) { dialog, id ->
+            .setPositiveButton(resources.getString(R.string.yes).uppercase()) { _, _ ->
                 viewModel.deleteUserLogin()
                 viewModel.getUserLogin().observe(this) {
                     if (it.token.isEmpty()) {
@@ -136,7 +117,7 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
             }
-            .setNegativeButton(resources.getString(R.string.no).uppercase()) { dialog, id ->
+            .setNegativeButton(resources.getString(R.string.no).uppercase()) { dialog, _ ->
                 dialog.dismiss()
             }
         alertDialog.create().show()

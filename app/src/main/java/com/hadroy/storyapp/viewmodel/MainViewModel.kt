@@ -3,6 +3,7 @@ package com.hadroy.storyapp.viewmodel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.cachedIn
 import com.hadroy.storyapp.data.model.LoginResult
 import com.hadroy.storyapp.data.repository.StoryRepository
 import com.hadroy.storyapp.data.repository.UserRepository
@@ -23,6 +24,6 @@ class MainViewModel(
         return userRepository.getUserLogin()
     }
 
-    fun getAllStory(token: String) = storyRepository.getAllStory(token)
+    fun getAllStory(token: String) = storyRepository.getAllStory(token).cachedIn(viewModelScope)
 
 }

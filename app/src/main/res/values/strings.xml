@@ -46,4 +46,5 @@
     <string name="invalid_password">Invalid password</string>
     <string name="user_not_found">User not found</string>
     <string name="create_story_title">New Story</string>
+    <string name="title_activity_maps">MapsActivity</string>
 </resources>
